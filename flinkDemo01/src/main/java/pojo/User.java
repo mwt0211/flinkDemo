@@ -1,11 +1,12 @@
 package pojo;
 
+
+import lombok.Builder;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.kafka.common.protocol.types.Field;
 
 import java.sql.Date;
 import java.util.Objects;
-
+@Builder
 public class User {
     private String id;
     private String name;
