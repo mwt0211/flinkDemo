@@ -88,9 +88,9 @@ public class IntervalJoinDemo2 {
                         out.collect(left + "<---->" + right);
                     }
                 });
-        process.print();
-        process.getSideOutput(ks1LaterDataTag).printToErr();
-        process.getSideOutput(ks2LaterDataTag).printToErr();
+        process.print("主流");
+        process.getSideOutput(ks1LaterDataTag).printToErr("ks1-later-data");
+        process.getSideOutput(ks2LaterDataTag).printToErr("ks2-later-data");
 
 
         env.execute();
