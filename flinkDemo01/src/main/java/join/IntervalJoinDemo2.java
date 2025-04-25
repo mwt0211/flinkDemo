@@ -70,6 +70,13 @@ public class IntervalJoinDemo2 {
                 .<Tuple3<String, Integer, Integer>>forBoundedOutOfOrderness(Duration.ofSeconds(3))
                 .withTimestampAssigner((value, ts) -> value.f1 * 1000L));
         //todo:Interval join
+        /**
+         * 1.只支持事件事件（assignTimestampsAndWatermarks）
+         * 2.指定上下界的偏移量（ .between(Time.seconds(-2), Time.seconds(2))）
+         * 3.process中只能处理intervalJoin 之后的数据
+         * 4.两条流关联之后的Watermark以最小的为准
+         * 5，如果当前数据的当前的事件事件《 当前的Watermark，则为迟到的数据
+         * */
         //分别keyBy,key为关联条件
         KeyedStream<Tuple2<String, Integer>, String> ks1 = ds1.keyBy(r1 -> r1.f0);
         KeyedStream<Tuple3<String, Integer, Integer>, String> ks2 = ds2.keyBy(r2 -> r2.f0);
