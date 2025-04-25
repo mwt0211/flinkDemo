@@ -3,6 +3,8 @@ package join;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -13,12 +15,15 @@ import org.apache.flink.streaming.api.functions.co.ProcessJoinFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
+import org.apache.flink.util.OutputTag;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.protocol.types.Field;
 
+import java.time.Duration;
 import java.util.Properties;
 
 /**
- * 间隔连接
+ * 双流连接的迟到的数据处理
  */
 public class IntervalJoinDemo2 {
     public static void main(String[] args) throws Exception {
@@ -39,7 +44,11 @@ public class IntervalJoinDemo2 {
                 String[] split = value.split(",");
                 return Tuple2.of(split[0], Integer.valueOf(split[1]));
             }
-        }).assignTimestampsAndWatermarks(WatermarkStrategy.<Tuple2<String, Integer>>forMonotonousTimestamps().withTimestampAssigner((value, ts) -> value.f1 * 1000L));
+        }).assignTimestampsAndWatermarks(
+                        WatermarkStrategy
+                                //乱序
+                        .<Tuple2<String, Integer>>forBoundedOutOfOrderness(Duration.ofSeconds(3))
+                        .withTimestampAssigner((value, ts) -> value.f1 * 1000L));
 
 //创建无界流2，消费kafka的topic为   test-stream2
         Properties properties2 = new Properties();
@@ -56,19 +65,32 @@ public class IntervalJoinDemo2 {
                 String[] split = value.split(",");
                 return Tuple3.of(split[0], Integer.valueOf(split[1]), Integer.valueOf(split[2]));
             }
-        }).assignTimestampsAndWatermarks(WatermarkStrategy.<Tuple3<String, Integer, Integer>>forMonotonousTimestamps().withTimestampAssigner((value, ts) -> value.f1 * 1000L));
+        }).assignTimestampsAndWatermarks(
+                WatermarkStrategy
+                .<Tuple3<String, Integer, Integer>>forBoundedOutOfOrderness(Duration.ofSeconds(3))
+                .withTimestampAssigner((value, ts) -> value.f1 * 1000L));
         //todo:Interval join
         //分别keyBy,key为关联条件
         KeyedStream<Tuple2<String, Integer>, String> ks1 = ds1.keyBy(r1 -> r1.f0);
         KeyedStream<Tuple3<String, Integer, Integer>, String> ks2 = ds2.keyBy(r2 -> r2.f0);
-        ks1.intervalJoin(ks2)
+        OutputTag<Tuple2<String, Integer>> ks1LaterDataTag = new OutputTag<>("ks1-later-data", Types.TUPLE(Types.STRING, Types.INT));
+        OutputTag<Tuple3<String, Integer, Integer>> ks2LaterDataTag = new OutputTag<>("ks2-later-data", Types.TUPLE(Types.STRING, Types.INT, Types.INT));
+        SingleOutputStreamOperator<String> process = ks1.intervalJoin(ks2)
                 //往前偏两秒，往后偏2秒，为闭区间
-                .between(Time.seconds(-2), Time.seconds(2)).process(new ProcessJoinFunction<Tuple2<String, Integer>, Tuple3<String, Integer, Integer>, String>() {
+                .between(Time.seconds(-2), Time.seconds(2))
+                //左侧迟到的数据放到在侧输出流中
+                .sideOutputLeftLateData(ks1LaterDataTag)
+                //右侧迟到的数据放到在侧输出流中
+                .sideOutputRightLateData(ks2LaterDataTag)
+                .process(new ProcessJoinFunction<Tuple2<String, Integer>, Tuple3<String, Integer, Integer>, String>() {
                     @Override
                     public void processElement(Tuple2<String, Integer> left, Tuple3<String, Integer, Integer> right, ProcessJoinFunction<Tuple2<String, Integer>, Tuple3<String, Integer, Integer>, String>.Context ctx, Collector<String> out) throws Exception {
                         out.collect(left + "<---->" + right);
                     }
-                }).print();
+                });
+        process.print();
+        process.getSideOutput(ks1LaterDataTag).printToErr();
+        process.getSideOutput(ks2LaterDataTag).printToErr();
 
 
         env.execute();
