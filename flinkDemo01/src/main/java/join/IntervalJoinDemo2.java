@@ -75,7 +75,13 @@ public class IntervalJoinDemo2 {
          * 2.指定上下界的偏移量（ .between(Time.seconds(-2), Time.seconds(2))）
          * 3.process中只能处理intervalJoin 之后的数据
          * 4.两条流关联之后的Watermark以最小的为准
-         * 5，如果当前数据的当前的事件事件《 当前的Watermark，则为迟到的数据
+         * 5，如果当前数据的当前的事件事件《 当前的Watermark，则为迟到的数据，其中主流的数据不处理
+         * ===》
+         * between后，可以将迟到的数据放置在侧输出流中【
+         * .sideOutputLeftLateData(ks1LaterDataTag)
+         *                 //右侧迟到的数据放到在侧输出流中
+         *                 .sideOutputRightLateData(ks2LaterDataTag)
+         *                 】
          * */
         //分别keyBy,key为关联条件
         KeyedStream<Tuple2<String, Integer>, String> ks1 = ds1.keyBy(r1 -> r1.f0);
