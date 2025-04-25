@@ -57,12 +57,14 @@ public class MysqlSourceSink {
                     @Override
                     public void accept(PreparedStatement preparedStatement, User user) throws SQLException {
                         System.out.println("user = " + user);
+
                         preparedStatement.setString(1, UUID.randomUUID().toString().replace("-",""));
                         preparedStatement.setString(2, user.getName());
                         preparedStatement.setInt(3, user.getAge());
                         preparedStatement.setString(4, user.getAddress());
                         preparedStatement.setString(5, user.getEmail());
-                        preparedStatement.setDate(6, new Date(System.currentTimeMillis()));
+                        java.util.Date date = new java.util.Date();
+                        preparedStatement.setDate(6, new Date(date.getTime()));
                     }
                 },
                 JdbcExecutionOptions.builder()
