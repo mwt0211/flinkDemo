@@ -43,7 +43,8 @@ public class MapStateDemo1 {
                                 Duration.ofSeconds(3)).
                         withTimestampAssigner(((element, recordTimestamp) -> element.getVc() * 1000L)));
         //按照Id分组
-        SingleOutputStreamOperator<String> process = WaterSentorDs.keyBy(r -> r.getId())
+        SingleOutputStreamOperator<String> process = WaterSentorDs
+                .keyBy(r -> r.getId())
                 .process(new KeyedProcessFunction<String, WaterSentor, String>() {
                     MapState<Integer, Integer> vcCountMapState;
 
