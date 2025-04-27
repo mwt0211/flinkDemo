@@ -11,8 +11,8 @@ public class UserMapFunction implements MapFunction<String, User> {
 //        user.setId(split[0]);
         user.setName(split[0]);
         user.setAge(Integer.valueOf(split[1]));
-        user.setAddress(split[2]);
-        user.setEmail(split[3]);
+//        user.setAddress(split[2]);
+//        user.setEmail(split[3]);
 
         return user;
     }
