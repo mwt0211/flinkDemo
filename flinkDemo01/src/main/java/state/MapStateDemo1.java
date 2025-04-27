@@ -43,7 +43,7 @@ public class MapStateDemo1 {
                                 Duration.ofSeconds(3)).
                         withTimestampAssigner(((element, recordTimestamp) -> element.getVc() * 1000L)));
         //按照Id分组
-        SingleOutputStreamOperator<String> WaterKs = WaterSentorDs.keyBy(r -> r.getId())
+        SingleOutputStreamOperator<String> process = WaterSentorDs.keyBy(r -> r.getId())
                 .process(new KeyedProcessFunction<String, WaterSentor, String>() {
                     MapState<Integer, Integer> vcCountMapState;
 
@@ -67,8 +67,7 @@ public class MapStateDemo1 {
                         out.collect("水位传感器为:【"+value.getId()+" 】水位线为：【"+value.getVc()+" 】出现的次数为："+vcCountMapState.get(vc));
                     }
                 });
-        WaterKs.print();
-//        process.print();
+        process.print();
         env.execute();
 
 
