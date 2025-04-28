@@ -45,6 +45,46 @@
             <artifactId>flink-connector-files</artifactId>
             <version>${flink.ver}</version>
         </dependency>
+<!--RocksDBStateBackend 用于状态管理-->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+            <version>1.7.0</version>
+<!--            <scope>provided</scope>-->
+        </dependency>
+
+        <!--hadoop-client -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>3.3.4</version>
+                        <scope>provided</scope>
+        </dependency>
+
+<!--        <dependencies>-->
+            <!-- Flink 的核心库 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-core</artifactId>
+                <version>${flink.ver}</version>
+            </dependency>
+            <!-- Flink 的运行时库 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-runtime</artifactId>
+                <version>${flink.ver}</version>
+            </dependency>
+            <!-- Flink 的 Web 运行时模块 -->
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-runtime-web</artifactId>
+                <version>${flink.ver}</version>
+            </dependency>
+<!--        </dependencies>-->
+
+
+
+
         <!--Mysql-->
         <dependency>
             <groupId>mysql</groupId>
